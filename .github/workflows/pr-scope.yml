@@ -1,0 +1,47 @@
+name: PR scope check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+jobs:
+  scope:
+    name: Single-domain scope
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR only touches one domain folder
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'meta') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          files=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[].filename')
+          if [ -z "$files" ]; then
+            echo "No changed files detected."
+            exit 0
+          fi
+          echo "Changed files:"
+          echo "$files"
+
+          outside=$(printf '%s\n' "$files" | grep -vE '^domains/[^/]+/' || true)
+          if [ -n "$outside" ]; then
+            echo "::error::Changes outside a domain folder are only allowed in PRs labelled 'meta' (leads). Offending files:"
+            printf '%s\n' "$outside"
+            exit 1
+          fi
+
+          domains=$(printf '%s\n' "$files" | sed -E 's|^domains/([^/]+)/.*$|\1|' | sort -u)
+          count=$(printf '%s\n' "$domains" | grep -c . || true)
+          if [ "$count" -ne 1 ]; then
+            echo "::error::A PR must touch exactly one domain folder. Domains touched:"
+            printf '%s\n' "$domains"
+            exit 1
+          fi
+
+          echo "OK — all changes are inside domains/$(printf '%s\n' "$domains" | head -n1)/"
+
+      - name: Skipped (meta label)
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'meta') }}
+        run: echo "PR labelled 'meta' — scope check skipped."
