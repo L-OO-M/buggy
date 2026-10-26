@@ -58,7 +58,7 @@ Pick one domain as yours. Do not modify other domains, root files (`README.md`, 
    git push -u origin fix/ai-ml/csv-parser-null-check
    ```
 
-6. Fill in the PR template. A lead reviews and merges.
+6. Fill in the PR template. The scope check must pass; a lead may review before merge.
 
 ## Rules
 
@@ -76,8 +76,16 @@ Pick one domain as yours. Do not modify other domains, root files (`README.md`, 
 
 Leads may add the **`meta`** label to a PR that legitimately needs to touch root or `.github/` files; the check skips labelled PRs.
 
-## For leads: one-time GitHub setup
+## GitHub setup status
 
-1. Repo **Settings → Collaborators → Add people** — add every member with role **Write**.
-2. Optional hardening: **Settings → Branches** (or Rulesets) → protect `main` → require a pull request before merging, require 1 review. Leave "Require review from Code Owners" off unless you also add a `CODEOWNERS` file with real GitHub usernames.
-3. Once PRs are required, nobody (including leads) pushes straight to `main` without a PR — use a `meta`-labelled PR for structural changes.
+Already configured on this repository:
+
+- **Branch protection (ruleset) on `main`** — direct pushes and force-pushes are blocked; every change goes through a pull request (0 required approvals, so nobody has to wait for permission to merge).
+- **Required status check** — the `Single-domain scope` check must pass before a PR can merge.
+- **PR scope workflow** — `.github/workflows/pr-scope.yml` runs on every PR.
+
+Still manual for leads:
+
+1. Repo **Settings → Collaborators → Add people** — add every member with role **Write** (one-time, then members never ask for permissions again).
+2. For structural changes (root files, `.github/`), open a PR and apply the **`meta`** label so the scope check is skipped.
+3. Optional later: add a `CODEOWNERS` file with real GitHub usernames and raise `required_approving_review_count` if you want mandatory lead review.
