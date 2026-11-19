@@ -1,0 +1,16 @@
+import mongoose from 'mongoose';
+
+const userAchievementSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    achievement: { type: mongoose.Schema.Types.ObjectId, ref: 'Achievement', required: true, index: true },
+    unlockedAt: { type: Date, default: Date.now },
+    context: { type: String, default: '', maxlength: 300 },
+  },
+  { timestamps: true },
+);
+
+userAchievementSchema.index({ user: 1, achievement: 1 }, { unique: true });
+userAchievementSchema.index({ user: 1, unlockedAt: -1 });
+
+export const UserAchievement = mongoose.model('UserAchievement', userAchievementSchema);
