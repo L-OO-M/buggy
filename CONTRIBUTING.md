@@ -14,6 +14,7 @@ This guide is for LOOM members who already have (or will be granted) **write acc
 | AI / Machine Learning | `domains/ai-ml/` |
 | Web Development | `domains/web-dev/` |
 | Cybersecurity | `domains/cybersecurity/` |
+| DSA | `domains/dsa/` |
 | Blockchain | `domains/blockchain/` |
 | Embedded Hardware | `domains/embedded-hardware/` |
 

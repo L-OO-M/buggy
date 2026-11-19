@@ -13,6 +13,7 @@ Work is organized by technical domain. Each domain lives in its own folder:
 | AI / Machine Learning | [`domains/ai-ml/`](domains/ai-ml/) |
 | Web Development | [`domains/web-dev/`](domains/web-dev/) |
 | Cybersecurity | [`domains/cybersecurity/`](domains/cybersecurity/) |
+| DSA | [`domains/dsa/`](domains/dsa/) |
 | Blockchain | [`domains/blockchain/`](domains/blockchain/) |
 | Embedded Hardware | [`domains/embedded-hardware/`](domains/embedded-hardware/) |
 
