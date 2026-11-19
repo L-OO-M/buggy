@@ -7,6 +7,7 @@ Challenge projects are grouped by technical domain. Each domain is a separate fo
 | AI / Machine Learning | [`ai-ml/`](ai-ml/) |
 | Web Development | [`web-dev/`](web-dev/) |
 | Cybersecurity | [`cybersecurity/`](cybersecurity/) |
+| DSA | [`dsa/`](dsa/) |
 | Blockchain | [`blockchain/`](blockchain/) |
 | Embedded Hardware | [`embedded-hardware/`](embedded-hardware/) |
 
