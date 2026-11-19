@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
+  }
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-ink-50 text-ink-800 font-sans antialiased dark:bg-ink-950 dark:text-ink-200;
+  }
+  ::selection {
+    @apply bg-brand-500/20 text-brand-900 dark:text-brand-100;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-ink-950;
+  }
+}
+
+@layer components {
+  .surface {
+    @apply rounded-2xl border border-ink-200/80 bg-white shadow-soft dark:border-white/10 dark:bg-ink-900/70;
+  }
+  .surface-muted {
+    @apply rounded-2xl border border-ink-200/60 bg-ink-50/80 dark:border-white/5 dark:bg-white/5;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 text-white shadow-lg shadow-brand-600/20 hover:bg-brand-500 hover:shadow-brand-500/30 active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply btn border border-ink-200 bg-white text-ink-700 hover:border-brand-300 hover:text-brand-700 dark:border-white/10 dark:bg-white/5 dark:text-ink-200 dark:hover:border-brand-400/50 dark:hover:text-white;
+  }
+  .btn-ghost {
+    @apply btn text-ink-600 hover:bg-ink-100 hover:text-ink-900 dark:text-ink-300 dark:hover:bg-white/10 dark:hover:text-white;
+  }
+  .btn-danger {
+    @apply btn bg-rose-600 text-white hover:bg-rose-500;
+  }
+  .btn-sm {
+    @apply rounded-lg px-3 py-1.5 text-xs;
+  }
+  .input {
+    @apply w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm text-ink-900 placeholder:text-ink-400 transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 dark:border-white/10 dark:bg-ink-900 dark:text-white dark:placeholder:text-ink-500;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-ink-500 dark:text-ink-400;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:border-brand-300 hover:text-brand-700 dark:border-white/10 dark:bg-white/5 dark:text-ink-300;
+  }
+  .chip-active {
+    @apply border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-400/60 dark:bg-brand-500/10 dark:text-brand-200;
+  }
+  .table-head {
+    @apply px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-ink-400;
+  }
+  .table-cell {
+    @apply px-4 py-3 text-sm text-ink-600 dark:text-ink-300;
+  }
+  .skeleton {
+    @apply relative overflow-hidden rounded-xl bg-ink-200/70 dark:bg-white/10;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent dark:via-white/10;
+  }
+  .section-title {
+    @apply font-display text-2xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-3xl;
+  }
+  .prose-local {
+    @apply text-sm leading-relaxed text-ink-600 dark:text-ink-300;
+  }
+  .link {
+    @apply font-medium text-brand-600 underline-offset-4 hover:underline dark:text-brand-300;
+  }
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-500 via-fuchsia-500 to-accent bg-clip-text text-transparent;
+  }
+  .hero-grid {
+    background-image: radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.16) 1px, transparent 0);
+    background-size: 26px 26px;
+  }
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 999px;
+}
