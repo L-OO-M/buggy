@@ -1,5 +1,3 @@
-# AI / Machine Learning
-
 Progressive, production-minded challenge projects for the AI/ML domain.
 
 ## Learning path
