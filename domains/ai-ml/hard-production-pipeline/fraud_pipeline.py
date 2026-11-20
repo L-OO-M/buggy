@@ -106,7 +106,28 @@ class ModelBundle:
 
 def validate_input(df: pd.DataFrame) -> pd.DataFrame:
     """Check ``df`` against the contract and return a clean frame of FEATURES only."""
-    return df
+    if not isinstance(df, pd.DataFrame):
+        raise SchemaError("Input must be a pandas DataFrame")
+    if df.empty:
+        raise SchemaError("Input frame must not be empty")
+
+    missing = [column for column in FEATURES if column not in df.columns]
+    if missing:
+        raise SchemaError("Missing required columns: " + ", ".join(missing))
+
+    out = df.loc[:, FEATURES].copy(deep=True)
+    for column in NUMERIC_FEATURES:
+        out[column] = pd.to_numeric(out[column], errors="coerce")
+        out.loc[~np.isfinite(out[column]), column] = np.nan
+    for column in CATEGORICAL_FEATURES:
+        out[column] = out[column].map(
+            lambda value: (
+                str(value).strip().lower()
+                if isinstance(value, str) and str(value).strip()
+                else np.nan
+            )
+        )
+    return out
 
 
 def build_model(seed: int = RANDOM_STATE) -> Pipeline:
@@ -117,42 +138,106 @@ def build_model(seed: int = RANDOM_STATE) -> Pipeline:
             ("scale", StandardScaler()),
         ]
     )
-    categorical = Pipeline([("onehot", OneHotEncoder())])
+    categorical = Pipeline([
+        ("impute", SimpleImputer(strategy="most_frequent")),
+        ("onehot", OneHotEncoder(handle_unknown="ignore")),
+    ])
     pre = ColumnTransformer(
         [
             ("num", numeric, NUMERIC_FEATURES),
             ("cat", categorical, CATEGORICAL_FEATURES),
         ]
     )
-    return Pipeline([("pre", pre), ("clf", LogisticRegression(max_iter=1000))])
+    return Pipeline([
+        ("pre", pre),
+        ("clf", LogisticRegression(
+            max_iter=1000,
+            class_weight="balanced",
+            random_state=seed,
+        )),
+    ])
 
 
 def choose_threshold(y_true, scores) -> float:
     """Pick the decision threshold. Predict fraud when score >= threshold."""
-    return 0.5
+    y = np.asarray(y_true)
+    scores = np.asarray(scores, dtype=float)
+    if y.size == 0 or scores.size == 0 or y.size != scores.size:
+        return 0.5
+
+    precision, recall, thresholds = precision_recall_curve(y, scores)
+    if thresholds.size == 0:
+        return 0.5
+    f1 = np.divide(
+        2 * precision[:-1] * recall[:-1],
+        precision[:-1] + recall[:-1],
+        out=np.zeros_like(precision[:-1]),
+        where=(precision[:-1] + recall[:-1]) != 0,
+    )
+    threshold = float(thresholds[int(np.argmax(f1))])
+    return min(max(threshold, 0.0), 1.0)
 
 
 def train(df: pd.DataFrame, seed: int = RANDOM_STATE) -> ModelBundle:
     """Train on ``df`` (features + target) and return a ModelBundle."""
-    X = df[FEATURES]
-    y = df[TARGET]
+    if not isinstance(df, pd.DataFrame):
+        raise SchemaError("Input must be a pandas DataFrame")
+    if TARGET not in df.columns:
+        raise SchemaError(f"Missing required column: {TARGET}")
+
+    X = validate_input(df)
+    y = pd.to_numeric(df[TARGET], errors="coerce")
+    valid = y.isin([0, 1])
+    if not valid.all():
+        raise SchemaError("Target must contain only 0 and 1")
+    y = y.astype(int)
+    if y.nunique() != 2:
+        raise SchemaError("Training data must contain both classes")
+
     model = build_model(seed).fit(X, y)
-    return ModelBundle(model=model, threshold=0.5)
+    scores = model.predict_proba(X)[:, 1]
+    threshold = choose_threshold(y, scores)
+    return ModelBundle(model=model, threshold=threshold)
 
 
 def predict(bundle: ModelBundle, df: pd.DataFrame) -> pd.DataFrame:
     """Return a DataFrame with columns ``probability`` and ``label``."""
     X = validate_input(df)
     proba = bundle.model.predict_proba(X)[:, 1]
-    return pd.DataFrame({"probability": proba, "label": (proba > 0.5).astype(int)})
+    return pd.DataFrame(
+        {"probability": proba, "label": (proba >= bundle.threshold).astype(int)},
+        index=X.index,
+    )
 
 
 def save_bundle(bundle: ModelBundle, path: PathLike) -> None:
     """Persist the bundle to disk."""
-    joblib.dump(bundle.model, path)
+    joblib.dump(
+        {
+            "model": bundle.model,
+            "threshold": bundle.threshold,
+            "schema_version": bundle.schema_version,
+            "features": FEATURES,
+        },
+        path,
+    )
 
 
 def load_bundle(path: PathLike) -> ModelBundle:
     """Load a bundle saved by ``save_bundle``."""
-    model = joblib.load(path)
-    return ModelBundle(model=model, threshold=0.5)
+    payload = joblib.load(path)
+    if not isinstance(payload, dict):
+        raise SchemaError("Saved bundle must contain ModelBundle metadata")
+    if payload.get("schema_version") != SCHEMA_VERSION:
+        raise SchemaError("Saved bundle schema version is incompatible")
+    if payload.get("features") != FEATURES:
+        raise SchemaError("Saved bundle feature contract is incompatible")
+    model = payload.get("model")
+    threshold = payload.get("threshold")
+    if not isinstance(model, Pipeline) or not isinstance(threshold, (int, float)):
+        raise SchemaError("Saved bundle is invalid")
+    return ModelBundle(
+        model=model,
+        threshold=float(threshold),
+        schema_version=SCHEMA_VERSION,
+    )
